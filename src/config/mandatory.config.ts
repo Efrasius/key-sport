@@ -13,7 +13,7 @@ export const mdrConfig = <TeamConfig>{
     theme: {
         textColor: '#FDFFFC',
         backgroundColor: '#23252C',
-        btnColor: '#e0474',
+        btnColor: '#e04744',
         headerBackgroundColor: '#23252C',
         iconColor: '#9BA1A6',
         tabIconDefaultColor: '#FDFFFC',

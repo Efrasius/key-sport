@@ -1,11 +1,28 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTeamConfig } from '../../src/hooks/useTeamConfig';
 import { Tabs } from 'expo-router';
-import { Image } from 'react-native';
-
+import { useRouter } from 'expo-router';
+import { Image, Pressable, Text, StyleSheet, View } from 'react-native';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 
 export default function TabLayout() {
-    const config = useTeamConfig()
+    const config = useTeamConfig();
+    const router = useRouter();
+    const [initializing, setInitializing] = useState<boolean>(true)
+    const [user, setUser] = useState();
+
+
+    function handleAuthStateChanged(user) {
+        setUser(user);
+        if (initializing) setInitializing(false);
+    }
+
+    useEffect(() => {
+        const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+        return subscriber;
+    }, []);
+
 
     return (
         <Tabs
@@ -21,7 +38,35 @@ export default function TabLayout() {
                     backgroundColor: config.theme.headerBackgroundColor,
                 },
                 headerTintColor: config.theme.textColor,
-                headerLeft: () => <Image source={config.theme.logoSquare} style={{width: 30, height: 30, marginHorizontal: 15}} />
+                headerLeft: () => (
+                    <Image
+                        source={config.theme.logoSquare}
+                        style={{ width: 30, height: 30, marginHorizontal: 15 }}
+                    />
+                ),
+                headerRight: () => (
+                    <>
+                        {/* {!user && <> */}
+                            <Pressable
+                                onPress={() => router.push('/auth')}
+                                style={({ pressed }) => [
+                                    styles.loginButton,
+                                    {
+                                        backgroundColor: config.theme.btnColor,
+                                        opacity: pressed ? 0.8 : 1,
+                                        transform: [{ scale: pressed ? 0.96 : 1 }],
+                                    },
+                                ]}
+                            >
+
+                                <FontAwesome name="sign-in" size={13} color="#fff" style={{ marginRight: 6 }} />
+                                <Text style={styles.loginText}>Se connecter</Text>
+
+
+                            </Pressable>
+                        {/* </>} */}
+                    </>
+                ),
             }}
         >
             <Tabs.Screen
@@ -31,7 +76,6 @@ export default function TabLayout() {
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
                 }}
             />
-
             <Tabs.Screen
                 name="matchs"
                 options={{
@@ -53,6 +97,28 @@ export default function TabLayout() {
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="user" color={color} />,
                 }}
             />
-        </Tabs>
+        </Tabs >
     );
 }
+
+const styles = StyleSheet.create({
+    loginButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 20,
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    loginText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+        letterSpacing: 0.3,
+    },
+});
