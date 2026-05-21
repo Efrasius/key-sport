@@ -5,9 +5,11 @@ import { TeamConfig } from "../src/config/general.config";
 import { useTeamConfig } from "../src/hooks/useTeamConfig";
 import { useRouter } from 'expo-router';
 import { signIn } from "../src/api/auth";
+import { useAuthStore } from "../src/stores/authStore";
 
 export default function Auth() {
     const config = useTeamConfig()
+    const authStore = useAuthStore()
     const [login, setLogin] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [error, setError] = useState<string | null>(null)
@@ -20,7 +22,10 @@ export default function Auth() {
         setError(null)
         setLoading(true)
         try {
-            await signIn(login, password)
+            const user = await signIn(login, password)
+
+            console.log('user: ', user)
+            // authStore.signIn(user, user.user.userName)
         } catch (e: any) {
             if (e.code === 'auth/invalid-email') {
                 setError("Adresse email invalide.")

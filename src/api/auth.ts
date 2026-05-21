@@ -1,6 +1,5 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../config/firebase'
-import { db } from '../config/firebase'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { auth, db } from '../config/firebase'
 import { doc, setDoc } from 'firebase/firestore'
 
 export async function signUp(email: string, password: string, userName: string) {
@@ -47,5 +46,13 @@ export async function signIn(email: string, password: string) {
         console.error(error);
         throw error
     }
+}
 
+export async function disconnect() {
+    try {
+        signOut(auth)
+    }
+    catch(error) {
+        return(error)
+    }
 }

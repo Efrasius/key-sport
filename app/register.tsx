@@ -1,6 +1,6 @@
 import { useState } from "react";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Text, TextInput, View, StyleSheet, Pressable, ScrollView } from "react-native";
+import { Text, TextInput, View, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { TeamConfig } from "../src/config/general.config";
 import { useTeamConfig } from "../src/hooks/useTeamConfig";
 import { signUp } from "../src/api/auth";
@@ -16,6 +16,8 @@ export default function Register() {
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [confirmPassword, setConfirmPassword] = useState<string>('')
+    const [showPassword, setShowPassword] = useState<boolean>(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false)
 
     async function handleSignUp() {
         try {
@@ -24,80 +26,108 @@ export default function Register() {
                 return;
             }
             const user = await signUp(email, password, username)
-
             authStore.signIn(user.user, username)
             setError(false)
-
             router.dismissAll()
             router.replace('/(tabs)')
         }
         catch (error) {
             setError(true)
         }
-
-
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.inputContainer}>
-                <Text style={styles.text}>Nom d'utilisateur</Text>
-                <TextInput
-                    style={styles.input}
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                />
-            </View>
-            <View style={styles.inputContainer}>
-                <Text style={styles.text}>Adresse e-mail</Text>
-                <TextInput
-                    style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
-            </View>
-            <View style={styles.inputContainer}>
-                <Text style={styles.text}>Mot de passe</Text>
-                <TextInput
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-            </View>
-            <View style={styles.inputContainer}>
-                <Text style={styles.text}>Confirmer le mot de passe</Text>
-                <TextInput
-                    style={styles.input}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                />
-            </View>
-            <Pressable
-                onPress={() => handleSignUp()}
-                style={({ pressed }) => [
-                    styles.registerButton,
-                    {
-                        backgroundColor: config.theme.btnColor,
-                        opacity: pressed ? 0.8 : 1,
-                        transform: [{ scale: pressed ? 0.96 : 1 }],
-                    },
-                ]}
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={styles.container}
+                keyboardShouldPersistTaps="handled"
             >
-                <FontAwesome name="user-plus" size={13} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={styles.registerText}>Créer un compte</Text>
-            </Pressable>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.text}>Nom d'utilisateur</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={username}
+                        onChangeText={setUsername}
+                        autoCapitalize="none"
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.text}>Adresse e-mail</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.text}>Mot de passe</Text>
+                    <View style={styles.passwordWrapper}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                        />
+                        <Pressable
+                            onPress={() => setShowPassword(prev => !prev)}
+                            style={styles.eyeButton}
+                        >
+                            <FontAwesome
+                                name={showPassword ? 'eye-slash' : 'eye'}
+                                size={18}
+                                color="#888"
+                            />
+                        </Pressable>
+                    </View>
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.text}>Confirmer le mot de passe</Text>
+                    <View style={styles.passwordWrapper}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry={!showConfirmPassword}
+                        />
+                        <Pressable
+                            onPress={() => setShowConfirmPassword(prev => !prev)}
+                            style={styles.eyeButton}
+                        >
+                            <FontAwesome
+                                name={showConfirmPassword ? 'eye-slash' : 'eye'}
+                                size={18}
+                                color="#888"
+                            />
+                        </Pressable>
+                    </View>
+                </View>
+                <Pressable
+                    onPress={() => handleSignUp()}
+                    style={({ pressed }) => [
+                        styles.registerButton,
+                        {
+                            backgroundColor: config.theme.btnColor,
+                            opacity: pressed ? 0.8 : 1,
+                            transform: [{ scale: pressed ? 0.96 : 1 }],
+                        },
+                    ]}
+                >
+                    <FontAwesome name="user-plus" size={13} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.registerText}>Créer un compte</Text>
+                </Pressable>
 
-            {error && (
-                <Text style={styles.errorText}>
-                    Une erreur est survenue. Veuillez vérifier vos informations et réessayer.
-                </Text>
-            )}
-        </ScrollView>
+                {error && (
+                    <Text style={styles.errorText}>
+                        Une erreur est survenue. Veuillez vérifier vos informations et réessayer.
+                    </Text>
+                )}
+            </ScrollView>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -123,6 +153,25 @@ function makeStyles(theme: TeamConfig['theme']) {
             borderRadius: 5,
             width: '90%',
             marginHorizontal: 'auto',
+        },
+        passwordWrapper: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'white',
+            height: 45,
+            borderRadius: 5,
+            width: '90%',
+            marginHorizontal: 'auto',
+        },
+        passwordInput: {
+            flex: 1,
+            height: 45,
+            paddingHorizontal: 10,
+        },
+        eyeButton: {
+            paddingHorizontal: 12,
+            height: 45,
+            justifyContent: 'center',
         },
         registerButton: {
             marginTop: 20,
