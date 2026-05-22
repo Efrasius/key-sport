@@ -52,13 +52,13 @@ export default function Description({match}: {match : Match}) {
                 </View>
             </View>
             <Text style={styles.date}>
-                {match?.date.toLocaleDateString('fr-FR', {
+                {match?.date.toDate().toLocaleDateString('fr-FR', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                 })}{' '}
-                {match?.date.toLocaleTimeString('fr-FR', {
+                {match?.date.toDate().toLocaleTimeString('fr-FR', {
                     hour: '2-digit',
                     minute: '2-digit',
                 })}

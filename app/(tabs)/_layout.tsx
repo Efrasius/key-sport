@@ -3,19 +3,30 @@ import { useTeamConfig } from '../../src/hooks/useTeamConfig';
 import { Tabs } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Image, Pressable, Text, StyleSheet, View } from 'react-native';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
+import { useAuthStore } from '../../src/stores/authStore';
+import { getDoc, doc } from 'firebase/firestore';
+import { UserData } from '../../src/types/userData';
+import { db } from '../../src/config/firebase';
+
 
 export default function TabLayout() {
     const config = useTeamConfig();
     const router = useRouter();
+    const authStore = useAuthStore();
     const [initializing, setInitializing] = useState<boolean>(true)
-    const [user, setUser] = useState();
 
 
-    function handleAuthStateChanged(user) {
-        setUser(user);
-        if (initializing) setInitializing(false);
+    async function handleAuthStateChanged(user: User | null) {
+        if (user) {
+            const userDoc = await getDoc(doc(db, "users", user.uid))
+            const userData = userDoc.data() as UserData
+            authStore.signIn(user, userData?.userName)
+        } else {
+            authStore.signOut()
+        }
+        if (initializing) setInitializing(false)
     }
 
     useEffect(() => {
@@ -46,7 +57,7 @@ export default function TabLayout() {
                 ),
                 headerRight: () => (
                     <>
-                        {/* {!user && <> */}
+                        {!authStore.isAuthenticated ?
                             <Pressable
                                 onPress={() => router.push('/auth')}
                                 style={({ pressed }) => [
@@ -63,8 +74,11 @@ export default function TabLayout() {
                                 <Text style={styles.loginText}>Se connecter</Text>
 
 
-                            </Pressable>
-                        {/* </>} */}
+                            </Pressable> :
+                            <Text style={{color: config.theme.textColor, marginRight: 15}}>
+                                {authStore.userName}
+                            </Text>
+                            }
                     </>
                 ),
             }}

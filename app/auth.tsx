@@ -22,10 +22,8 @@ export default function Auth() {
         setError(null)
         setLoading(true)
         try {
-            const user = await signIn(login, password)
-
-            console.log('user: ', user)
-            // authStore.signIn(user, user.user.userName)
+            await signIn(login, password)
+            router.replace('/(tabs)')
         } catch (e: any) {
             if (e.code === 'auth/invalid-email') {
                 setError("Adresse email invalide.")

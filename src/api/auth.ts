@@ -32,17 +32,9 @@ export async function signUp(email: string, password: string, userName: string) 
 
 export async function signIn(email: string, password: string) {
     try {
-        const user = await signInWithEmailAndPassword(auth, email, password)
-
-        console.log('user: ', user)
-        return user
+        await signInWithEmailAndPassword(auth, email, password)
     }
     catch (error) {
-
-        if (error.code === 'auth/invalid-email') {
-            console.log('That email address is invalid!');
-        }
-
         console.error(error);
         throw error
     }
@@ -52,7 +44,7 @@ export async function disconnect() {
     try {
         signOut(auth)
     }
-    catch(error) {
-        return(error)
+    catch (error) {
+        return (error)
     }
 }

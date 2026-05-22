@@ -1,9 +1,10 @@
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { TeamConfig } from '../../src/config/general.config';
 import { useTeamConfig } from '../../src/hooks/useTeamConfig';
-import { mockMatches } from '../../src/mocks/matches';
 import { Match } from '../../src/types/match'
+import { getMatch } from '../../src/api/matches';
 import Description from '../../src/components/match/Description';
 import Prediction from '../../src/components/match/Prediction';
 
@@ -12,7 +13,10 @@ export default function Tab() {
   const config = useTeamConfig()
   const styles = makeStyles(config.theme)
 
-  const match: Match | undefined = mockMatches.find((mock) => mock.id === id)
+  const { isPending, isError, data, error } = useQuery({
+    queryKey: ['match', id],
+    queryFn: () => getMatch(id)
+  })
 
 
   return (
@@ -23,19 +27,22 @@ export default function Tab() {
           headerTintColor: config.theme.textColor,
         }}
       />
-      {match ?
-        <ScrollView style={styles.container}>
-          <Description match={match} />
-          <Prediction match={match} />
-        </ScrollView>
-        :
+      {isPending && <View style={styles.errorContainer}><ActivityIndicator /></View>}
+      {isError &&
         <View style={styles.errorContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorTitle}>Match introuvable</Text>
           <Text style={styles.errorMessage}>
             Impossible de retrouver le match demandé.
           </Text>
-        </View>}
+        </View>
+      }
+      {(!isPending && !isError && data) &&
+        <ScrollView style={styles.container}>
+          <Description match={data} />
+          <Prediction match={data} />
+        </ScrollView>
+      }
     </View>
   );
 }
