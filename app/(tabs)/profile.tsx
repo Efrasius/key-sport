@@ -13,6 +13,7 @@ export default function Profile() {
   const authStore = useAuthStore()
   const [error, setError] = useState<string>('')
 
+
   async function handleDisconnect() {
     try {
       await disconnect()

@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Image, Pressable, Text, StyleSheet, View } from 'react-native';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../src/stores/authStore';
 import { getDoc, doc } from 'firebase/firestore';
 import { UserData } from '../../src/types/userData';
@@ -18,16 +18,17 @@ export default function TabLayout() {
     const [initializing, setInitializing] = useState<boolean>(true)
 
 
-    async function handleAuthStateChanged(user: User | null) {
+    const handleAuthStateChanged = useCallback(async (user: User | null) => {
         if (user) {
             const userDoc = await getDoc(doc(db, "users", user.uid))
-            const userData = userDoc.data() as UserData
-            authStore.signIn(user, userData?.userName)
+            const userData = { id: userDoc.id, ...userDoc.data() } as UserData
+
+            authStore.signIn(user, userData)
         } else {
             authStore.signOut()
         }
         if (initializing) setInitializing(false)
-    }
+    }, [initializing])
 
     useEffect(() => {
         const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
@@ -75,10 +76,10 @@ export default function TabLayout() {
 
 
                             </Pressable> :
-                            <Text style={{color: config.theme.textColor, marginRight: 15}}>
+                            <Text style={{ color: config.theme.textColor, marginRight: 15 }}>
                                 {authStore.userName}
                             </Text>
-                            }
+                        }
                     </>
                 ),
             }}

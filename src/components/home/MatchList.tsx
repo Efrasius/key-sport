@@ -18,7 +18,7 @@ export default function MatchList({ matchList, status }: { matchList: Match[], s
 
     return (
         <View style={styles.container}>
-            <Text style={{ color: config.theme.textColor }}>
+            <Text style={{ color: config.theme.textColor, fontWeight: 'bold', }}>
                 {sectionTitle}
             </Text>
 
