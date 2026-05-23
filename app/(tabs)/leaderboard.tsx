@@ -4,6 +4,7 @@ import { useTeamConfig } from '../../src/hooks/useTeamConfig';
 import { useQuery } from '@tanstack/react-query';
 import { getLeaderBoard } from '../../src/api/users';
 import { useAuthStore } from '../../src/stores/authStore';
+import MyRank from '../../src/components/leaderboard/MyRank';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -17,7 +18,6 @@ export default function Leaderboard() {
     queryFn: getLeaderBoard,
   });
 
-  const userRank = data?.findIndex((u) => u.id === authStore.id) ?? -1;
 
   return (
     <ScrollView style={styles.container}>
@@ -82,24 +82,7 @@ export default function Leaderboard() {
             })}
           </View>
 
-          {/* My score card */}
-          <View style={styles.myScoreCard}>
-            <View style={styles.myScoreLeft}>
-              <Text style={styles.myScoreLabel}>Votre classement</Text>
-              <Text style={styles.myScoreRank}>
-                {userRank >= 0
-                  ? userRank < 3
-                    ? MEDALS[userRank]
-                    : `#${userRank + 1}`
-                  : '—'}
-              </Text>
-            </View>
-            <View style={styles.myScoreDivider} />
-            <View style={styles.myScoreRight}>
-              <Text style={styles.myScoreLabel}>Vos points</Text>
-              <Text style={styles.myScorePoints}>{authStore.totalPoints ?? '—'}</Text>
-            </View>
-          </View>
+          <MyRank />
         </>
       )}
     </ScrollView>
@@ -235,50 +218,6 @@ function makeStyles(theme: TeamConfig['theme']) {
       opacity: 1,
     },
     // My score card
-    myScoreCard: {
-      flexDirection: 'row',
-      marginTop: 20,
-      marginBottom: 32,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.2)',
-      backgroundColor: 'rgba(255, 255, 255, 0.07)',
-      overflow: 'hidden',
-    },
-    myScoreLeft: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 18,
-      gap: 6,
-    },
-    myScoreDivider: {
-      width: 1,
-      marginVertical: 14,
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    },
-    myScoreRight: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 18,
-      gap: 6,
-    },
-    myScoreLabel: {
-      fontSize: 11,
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-      color: theme.textColor,
-      opacity: 0.45,
-    },
-    myScoreRank: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: theme.textColor,
-    },
-    myScorePoints: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: theme.textColor,
-    },
+    
   });
 }

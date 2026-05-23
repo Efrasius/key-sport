@@ -1,51 +1,81 @@
-import { ScrollView, StyleSheet, ActivityIndicator, View, Text } from 'react-native';
+import { ScrollView, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTeamConfig } from '../../src/hooks/useTeamConfig';
 import { TeamConfig } from '../../src/config/general.config';
-import { Match } from '../../src/types/match';
 import { getMatches } from '../../src/api/matches';
 import MatchList from '../../src/components/home/MatchList';
 
-
 export default function Matchs() {
-  const config = useTeamConfig()
-  const styles = makeStyles(config.theme)
+  const config = useTeamConfig();
+  const styles = makeStyles(config.theme);
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
 
-  const { isPending, isError, data, error } = useQuery({
+  const { isPending, isError, data } = useQuery({
     queryKey: ['matches'],
-    queryFn: getMatches
-  })
+    queryFn: getMatches,
+  });
 
-
+  const games = config.games; // string[] from TeamConfig
+  const filtered = data
+    ? selectedGame
+      ? data.filter((m) => m.game === selectedGame)
+      : data
+    : [];
 
   return (
     <ScrollView style={styles.container}>
-      {isPending && <View style={styles.errorContainer}><ActivityIndicator /></View>}
-      {isError &&
-        <View style={styles.errorContainer}>
+      {/* Game filter pills */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.pill, selectedGame === null && styles.pillActive]}
+          onPress={() => setSelectedGame(null)}
+        >
+          <Text style={[styles.pillText, selectedGame === null && styles.pillTextActive]}>Tous</Text>
+        </TouchableOpacity>
+        {games.map((game) => (
+          <TouchableOpacity
+            key={game}
+            style={[styles.pill, selectedGame === game && styles.pillActive]}
+            onPress={() => setSelectedGame(game === selectedGame ? null : game)}
+          >
+            <Text style={[styles.pillText, selectedGame === game && styles.pillTextActive]}>
+              {game.toUpperCase()}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {isPending && (
+        <View style={styles.stateContainer}>
+          <ActivityIndicator color={config.theme.btnColor} />
+        </View>
+      )}
+      {isError && (
+        <View style={styles.stateContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorTitle}>Impossible de charger les matchs</Text>
-        </View>}
-      {(!isPending && !isError && data) &&
+        </View>
+      )}
+      {!isPending && !isError && data && (
         <>
           <MatchList
-            status={'live'}
-            matchList={data.filter((match) => match.status === 'live')}
+            sectionTitle="EN COURS"
+            matchList={filtered.filter((m) => m.status === 'live')}
           />
           <MatchList
-            status={'upcoming'}
-            matchList={data.filter((match) => match.status === 'upcoming')}
+            sectionTitle="PROCHAINS MATCHS"
+            matchList={filtered.filter((m) => m.status === 'upcoming')}
           />
           <MatchList
-            status={'past'}
-            matchList={data.filter((match) => match.status === 'won' || match.status === 'lost')}
+            sectionTitle="PASSÉS"
+            matchList={filtered.filter((m) => m.status === 'won' || m.status === 'lost')}
           />
         </>
-      }
-    </ScrollView >
+      )}
+    </ScrollView>
   );
 }
-
 
 function makeStyles(theme: TeamConfig['theme']) {
   return StyleSheet.create({
@@ -53,27 +83,47 @@ function makeStyles(theme: TeamConfig['theme']) {
       flex: 1,
       backgroundColor: theme.backgroundColor,
     },
-    errorContainer: {
+    filterRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      paddingHorizontal: 15,
+      paddingVertical: 12,
+    },
+    pill: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.iconColor,
+    },
+    pillActive: {
+      backgroundColor: theme.btnColor,
+      borderColor: theme.btnColor,
+    },
+    pillText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.iconColor,
+      letterSpacing: 0.5,
+    },
+    pillTextActive: {
+      color: '#FFFFFF',
+    },
+    stateContainer: {
       flex: 1,
-      backgroundColor: theme.backgroundColor,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 24,
-      gap: 8,
+      paddingTop: 80,
+      gap: 10,
     },
     errorIcon: {
-      fontSize: 48,
+      fontSize: 40,
     },
     errorTitle: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '700',
       color: theme.textColor,
-    },
-    errorMessage: {
-      fontSize: 14,
-      color: theme.textColor,
-      opacity: 0.6,
-      textAlign: 'center',
     },
   });
 }

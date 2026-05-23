@@ -5,17 +5,21 @@ import { TeamConfig } from '../../src/config/general.config';
 import { Match } from '../../src/types/match';
 import { getMatches } from '../../src/api/matches';
 import MatchList from '../../src/components/home/MatchList';
+import { useAuthStore } from '../../src/stores/authStore';
+import { useEffect } from 'react';
+import MyRank from '../../src/components/leaderboard/MyRank';
 
 
 export default function Tab() {
   const config = useTeamConfig()
   const styles = makeStyles(config.theme)
+  const authStore = useAuthStore()
+
 
   const { isPending, isError, data, error } = useQuery({
     queryKey: ['matches'],
     queryFn: getMatches
   })
-
 
 
   return (
@@ -29,17 +33,30 @@ export default function Tab() {
       {(!isPending && !isError && data) &&
         <>
           <MatchList
-            status={'live'}
             matchList={data.filter((match) => match.status === 'live')}
+            sectionTitle={'EN COURS'}
           />
           <MatchList
-            status={'upcoming'}
+            sectionTitle={'PROCHAIN MATCH'}
+            nbr={1}
             matchList={data.filter((match) => match.status === 'upcoming')}
           />
-          <MatchList
-            status={'past'}
-            matchList={data.filter((match) => match.status === 'won' || match.status === 'lost')}
-          />
+          {authStore.isAuthenticated &&
+            <View>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.accent, { backgroundColor: config.theme.btnColor }]} />
+                <Text style={styles.sectionTitle}>MON CLASSEMENT</Text>
+
+              </View>
+              <MyRank />
+
+              <View style={styles.sectionHeader}>
+                <View style={[styles.accent, { backgroundColor: config.theme.btnColor }]} />
+                <Text style={styles.sectionTitle}>RÉSEAUX SOCIAUX</Text>
+
+              </View>
+            </View>
+          }
         </>
       }
     </ScrollView >
@@ -52,13 +69,14 @@ function makeStyles(theme: TeamConfig['theme']) {
     container: {
       flex: 1,
       backgroundColor: theme.backgroundColor,
+      padding: 15,
     },
     errorContainer: {
       flex: 1,
       backgroundColor: theme.backgroundColor,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 24,
+      padding: 10,
       gap: 8,
     },
     errorIcon: {
@@ -74,6 +92,30 @@ function makeStyles(theme: TeamConfig['theme']) {
       color: theme.textColor,
       opacity: 0.6,
       textAlign: 'center',
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 10,
+    },
+    accent: {
+      width: 3,
+      height: 14,
+      borderRadius: 2,
+    },
+    sectionTitle: {
+      flex: 1,
+      color: theme.textColor,
+      fontWeight: '700',
+      fontSize: 12,
+      letterSpacing: 1.2,
+      opacity: 0.9,
+    },
+    count: {
+      color: theme.iconColor,
+      fontSize: 12,
+      fontWeight: '600',
     },
   });
 }

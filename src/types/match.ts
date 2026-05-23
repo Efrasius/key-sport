@@ -4,7 +4,7 @@ export interface Match {
     id: string
     teams: string[]
     game: string
-    date: Date | Timestamp
+    date: Timestamp
     status: 'won' | 'lost' | 'live' | 'upcoming'
     tournament: string
 }
